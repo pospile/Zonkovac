@@ -1,8 +1,11 @@
 package cz.pospichal.zonkova;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -32,6 +35,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        MarketplaceService mSensorService = new MarketplaceService(getApplicationContext());
+        Intent mServiceIntent = new Intent(getApplicationContext(), mSensorService.getClass());
+        if (!isMyServiceRunning(mSensorService.getClass())) {
+            startService(mServiceIntent);
+        }
+
 
         try {
             jsonArray = new GetJson().AsString("https://api.zonky.cz/loans/marketplace");
@@ -112,6 +123,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
     }
 
 }

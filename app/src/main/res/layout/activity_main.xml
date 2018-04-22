@@ -23,14 +23,13 @@
         app:layout_constraintVertical_bias="0.339"
         app:srcCompat="@drawable/logo" />
 
-    <TextView
+    <android.support.v7.widget.AppCompatTextView
         android:id="@+id/loadingTextView"
         android:layout_width="269dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="76dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:fontFamily="@font/bunya"
         android:text="NAČÍTÁM TRŽIŠTĚ"
         android:textAlignment="center"
         android:textColor="@color/colorPrimaryDark"

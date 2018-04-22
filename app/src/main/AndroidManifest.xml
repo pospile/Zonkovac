@@ -23,10 +23,22 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-
         <activity android:name=".Marketplace">
-
         </activity>
+
+        <service
+            android:name=".MarketplaceService"
+            android:enabled="true" />
+        <receiver
+            android:name=".RestartService"
+            android:enabled="true"
+            android:exported="true"
+            android:label="RestartServiceWhenStopped">
+            <intent-filter>
+                <action android:name="ac.in.ActivityRecognition.RestartSensor" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

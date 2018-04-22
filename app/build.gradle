@@ -27,4 +27,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.github.100rabhkr:GetJSON:1.0'
     implementation 'com.iravul.swipecardview:swipecardview:1.0.0'
+    implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
 }
