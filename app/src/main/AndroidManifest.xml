@@ -3,7 +3,7 @@
     package="cz.pospichal.zonkova">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -12,10 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -23,12 +23,13 @@
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-        <activity android:name=".Marketplace">
-        </activity>
+
+        <activity android:name=".Marketplace"></activity>
 
         <service
             android:name=".MarketplaceService"
             android:enabled="true" />
+
         <receiver
             android:name=".RestartService"
             android:enabled="true"
@@ -39,6 +40,7 @@
             </intent-filter>
         </receiver>
 
+        <activity android:name=".Loan"></activity>
     </application>
 
 </manifest>

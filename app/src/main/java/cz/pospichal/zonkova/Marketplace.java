@@ -19,6 +19,8 @@ import com.iravul.swipecardview.RecyclerViewClickListener;
 import com.iravul.swipecardview.SwipeCardAdapter;
 import com.iravul.swipecardview.SwipeCardModel;
 
+import net.orange_box.storebox.StoreBox;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,11 +50,15 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
                         .input("Počet vteřin", "", new MaterialDialog.InputCallback() {
                             @Override
                             public void onInput(MaterialDialog dialog, CharSequence input) {
-                                int cas = Integer.parseInt(input.toString());
-                                if (cas == 0) {
-
-                                }
                                 Log.e("NASTAVENI", "Pocet vterin se zmenil!" + input.toString());
+                                PreferencesStorage storage = StoreBox.create(Marketplace.this, PreferencesStorage.class);
+                                storage.setLimit(Integer.parseInt(input.toString()));
+                                storage.setLastId(0);
+                                stopService(new Intent(Marketplace.this, MarketplaceService.class));
+
+                                MarketplaceService mSensorService = new MarketplaceService(getApplicationContext());
+                                Intent mServiceIntent = new Intent(getApplicationContext(), mSensorService.getClass());
+                                startService(mServiceIntent);
                             }
                         }).show();
             }
@@ -64,12 +70,15 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
 
             List<SwipeCardModel> swipeCardModels = new ArrayList<>();
 
+            PreferencesStorage storage = StoreBox.create(Marketplace.this, PreferencesStorage.class);
+            storage.setLastId(array.getJSONObject(0).getInt("id"));
 
             for (int i = 0; i < array.length(); i++) {
                 JSONObject row = array.getJSONObject(i);
 
+
                 String name = row.getString("name");
-                String interestRate = ((int)(row.getDouble("interestRate")*100))+" %";
+                String interestRate =  (String.format("%.2f", (row.getDouble("interestRate")*100)))+"%";
                 String amount = ((int)row.getDouble("amount"))+" ,-";
                 String storyShort = row.getString("story").length() >= 90 ?  row.getString("story").substring(0, 90).replace("\n", "")+"..." : row.getString("story").replace("\n", "");
                 String photoUrl = "https://api.zonky.cz"+row.getJSONArray("photos").getJSONObject(0).getString("url");
@@ -82,24 +91,12 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
                 swipeCardModel.setPhotoUrl(photoUrl);
                 swipeCardModels.add(swipeCardModel);
             }
-            /*
-            for(int i=0;i<=10;i++){
-                SwipeCardModel swipeCardModel = new SwipeCardModel();
-                swipeCardModel.setId("ID-"+i);
-                swipeCardModel.setTitle("Product-"+i);
-                swipeCardModel.setDescription("ProductDesc-"+i);
-                swipeCardModel.setPrice(i*10+" Euro");
-                swipeCardModel.setPhotoUrl("https://s-media-cache-ak0.pinimg.com/736x/a3/99/24/a39924a3fcb7266ff7360af8a6ba2e98.jpg");
-                swipeCardModels.add(swipeCardModel);
-            }
-            */
 
             SwipeCardAdapter swipeCardAdapter = new SwipeCardAdapter(Marketplace.this, swipeCardModels, Marketplace.this);
             LinearLayoutManager layoutManager = new LinearLayoutManager(Marketplace.this, LinearLayoutManager.HORIZONTAL, false);
             RecyclerView recyclerView = (RecyclerView) findViewById(R.id.marketplaceRecycler);
             recyclerView.setLayoutManager(layoutManager);
             recyclerView.setAdapter(swipeCardAdapter);
-
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -114,7 +111,13 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
 
     @Override
     public void recyclerViewListClicked(View view, int i) {
-
+        try {
+            Intent intent = new Intent(Marketplace.this, Loan.class);
+            intent.putExtra("loan", array.getString(i));
+            startActivity(intent);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 }
