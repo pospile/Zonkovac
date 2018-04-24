@@ -1,8 +1,10 @@
 package cz.pospichal.zonkova;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.Image;
 import android.os.Debug;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatImageButton;
@@ -28,17 +30,22 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+//Application main view with all loans loaded from api
 public class Marketplace extends AppCompatActivity implements RecyclerViewClickListener {
 
+    //JSON data from zonky endpoint converted to JSONArray
     private JSONArray array;
 
+    //View is created, all setup code in this class
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_marketplace);
 
-        ImageButton imgButtonSettings = (ImageButton) findViewById(R.id.settingsBtn);
+        //view with cog icon for settings
+        ImageButton imgButtonSettings = findViewById(R.id.settingsBtn);
 
+        //OnClick listener which opens settings dialog with input
         imgButtonSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -49,13 +56,17 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
                         .inputType(InputType.TYPE_CLASS_NUMBER)
                         .input("Počet vteřin", "", new MaterialDialog.InputCallback() {
                             @Override
-                            public void onInput(MaterialDialog dialog, CharSequence input) {
-                                Log.e("NASTAVENI", "Pocet vterin se zmenil!" + input.toString());
+                            public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                //Number of seconds loaded from dialog, saving it into SharedPrefs
+                                Log.e("SETTINGS", "Seconds changed to: " + input.toString());
                                 PreferencesStorage storage = StoreBox.create(Marketplace.this, PreferencesStorage.class);
                                 storage.setLimit(Integer.parseInt(input.toString()));
-                                storage.setLastId(0);
-                                stopService(new Intent(Marketplace.this, MarketplaceService.class));
 
+                                //TODO:// Line below is here mainly because of testing, this saves id of last obtained loan from endpoint, which means 0 resets recents downloads (may be deleted after testing)
+                                storage.setLastId(0);
+
+                                //Stopping service and starting it again for changed time to take place
+                                stopService(new Intent(Marketplace.this, MarketplaceService.class));
                                 MarketplaceService mSensorService = new MarketplaceService(getApplicationContext());
                                 Intent mServiceIntent = new Intent(getApplicationContext(), mSensorService.getClass());
                                 startService(mServiceIntent);
@@ -64,27 +75,36 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
             }
         });
 
+        //Obtaining downloaded json from MainActivity.java
         Intent intent = getIntent();
         try {
+            //Converting string into JSONArray
             array = new JSONArray(intent.getStringExtra("marketplace"));
 
+            //Variable holding all cards with loans
             List<SwipeCardModel> swipeCardModels = new ArrayList<>();
 
+            //Saving last obtained id to SharedPrefs in order to not notify user about loans he already seen.
             PreferencesStorage storage = StoreBox.create(Marketplace.this, PreferencesStorage.class);
             storage.setLastId(array.getJSONObject(0).getInt("id"));
 
+            //Coming throught all loans obtained from endpoint and saving them into cards.
             for (int i = 0; i < array.length(); i++) {
                 JSONObject row = array.getJSONObject(i);
 
 
                 String name = row.getString("name");
-                String interestRate =  (String.format("%.2f", (row.getDouble("interestRate")*100)))+"%";
+                //Rounding interest rate for case its not in two decimal format
+                //Also supressing locale warning as this is not associated to function we need here (double rounding)
+                @SuppressLint("DefaultLocale") String interestRate =  (String.format("%.2f", (row.getDouble("interestRate")*100)))+"%";
                 String amount = ((int)row.getDouble("amount"))+" ,-";
+                //Cutting stories to small descriptions
                 String storyShort = row.getString("story").length() >= 90 ?  row.getString("story").substring(0, 90).replace("\n", "")+"..." : row.getString("story").replace("\n", "");
                 String photoUrl = "https://api.zonky.cz"+row.getJSONArray("photos").getJSONObject(0).getString("url");
 
                 SwipeCardModel swipeCardModel = new SwipeCardModel();
 
+                //Setting card properties to be shown in recycler view
                 swipeCardModel.setId(storyShort);
                 swipeCardModel.setDescription(name);
                 swipeCardModel.setPrice(interestRate + " p.a. / " + amount);
@@ -92,9 +112,10 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
                 swipeCardModels.add(swipeCardModel);
             }
 
+            //Recycler view basic settings to show loan cards
             SwipeCardAdapter swipeCardAdapter = new SwipeCardAdapter(Marketplace.this, swipeCardModels, Marketplace.this);
             LinearLayoutManager layoutManager = new LinearLayoutManager(Marketplace.this, LinearLayoutManager.HORIZONTAL, false);
-            RecyclerView recyclerView = (RecyclerView) findViewById(R.id.marketplaceRecycler);
+            RecyclerView recyclerView = findViewById(R.id.marketplaceRecycler);
             recyclerView.setLayoutManager(layoutManager);
             recyclerView.setAdapter(swipeCardAdapter);
 
@@ -105,14 +126,16 @@ public class Marketplace extends AppCompatActivity implements RecyclerViewClickL
 
     @Override
     public void onBackPressed() {
-        //Odepřít přístup k tlačítku zpět v této aktivitě.
+        //Decline access to back button, we dont want him to leave our app like that.
         //super.onBackPressed();
     }
 
     @Override
     public void recyclerViewListClicked(View view, int i) {
         try {
+            //Opening loan activity with user selected loan.
             Intent intent = new Intent(Marketplace.this, Loan.class);
+            //this gives over the details about selected loan to next activity.
             intent.putExtra("loan", array.getString(i));
             startActivity(intent);
         } catch (JSONException e) {

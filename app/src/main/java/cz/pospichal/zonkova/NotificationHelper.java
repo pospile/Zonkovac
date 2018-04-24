@@ -9,9 +9,14 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 
+//Singleton class that handles notifications in this application / service
 class NotificationHelper {
     private static final NotificationHelper ourInstance = new NotificationHelper();
 
+    /**
+     * Singleton
+     * @return (NotificationHelper) instance of this notification helper.
+     */
     static NotificationHelper getInstance() {
         return ourInstance;
     }
@@ -19,6 +24,12 @@ class NotificationHelper {
     private NotificationHelper() {
     }
 
+
+    //TODO:// Check if this is cool at all supported android sdks as there were problem with latest Oreo thanks to NotificationChannel (repaired in latest commit)
+    /**
+     * Function for requesting OS to send local notification to user
+     * @param context -> context from which is this notificating created from
+     */
     public void DrawNotification(Context context) {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext(), "notify_001");
@@ -45,9 +56,12 @@ class NotificationHelper {
             NotificationChannel channel = new NotificationChannel("notify_001",
                     "Channel human readable title",
                     NotificationManager.IMPORTANCE_DEFAULT);
-            mNotificationManager.createNotificationChannel(channel);
+            if (mNotificationManager != null) {
+                mNotificationManager.createNotificationChannel(channel);
+            }
         }
 
+        assert mNotificationManager != null;
         mNotificationManager.notify(0, mBuilder.build());
     }
 }

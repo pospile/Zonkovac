@@ -28,15 +28,28 @@ import java.util.concurrent.ExecutionException;
 
 import br.com.goncalves.pugnotification.notification.PugNotification;
 
+//Service class for handling notifications without any backend
+//Nothing really hard, just request api endpoint and check if there is newer id than id saved in SharedPrefs.
 public class MarketplaceService extends Service {
 
+    //number of ticks from start of service or reset
     private int counter;
-    private Context context;
+
+    //Timer that ticks every second
+    private Timer timer;
+
+    //Task which check if it is time to do network request
+    private TimerTask timerTask;
+
+    //number of ticks before new check is done against zonky endpoint
     private int limit;
 
+    /**
+     * Constructor for Notification service
+     * @param applicationContext Just pass the context so we know that this is request from actual app
+     */
     public MarketplaceService(Context applicationContext){
         super();
-        context = applicationContext;
     }
 
     public MarketplaceService() {
@@ -48,25 +61,29 @@ public class MarketplaceService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         PreferencesStorage storage = StoreBox.create(MarketplaceService.this, PreferencesStorage.class);
+        //Check SharedPrefs for limit of ticks before zonky check
         limit = storage.getLimit();
         startTimer();
         return START_STICKY;
     }
 
+    //Really important step. We need to be notified before our service is killed by OS, so send notification to rest of app and die peacefully.
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         Log.i("EXIT", "ondestroy!");
 
+        //SEND Notification that we had been stopped
         Intent broadcastIntent = new Intent("ac.in.ActivityRecognition.RestartSensor");
         sendBroadcast(broadcastIntent);
+        //die peacefully
         stoptimertask();
     }
 
-    private Timer timer;
-    private TimerTask timerTask;
 
+    /**
+     * Start timer service
+     */
     public void startTimer() {
         //set a new Timer
         timer = new Timer();
@@ -78,6 +95,7 @@ public class MarketplaceService extends Service {
         timer.schedule(timerTask, 1000, 1000); //
     }
 
+    //Init timer task to check for endpoint
     public void initializeTimerTask() {
         timerTask = new TimerTask() {
             public void run() {
@@ -88,25 +106,29 @@ public class MarketplaceService extends Service {
                         String jsonString = new GetJson().AsString("https://api.zonky.cz/loans/marketplace");
                         JSONObject row0 = new JSONArray(jsonString).getJSONObject(0);
                         PreferencesStorage storage = StoreBox.create(MarketplaceService.this, PreferencesStorage.class);
+                        //Checking saved id against remote id
                         if  (storage.getLastId() == row0.getInt("id"))
                         {
-                            Log.e("No NEWS!","Nepřišla nám žádná nová půjčka, kruci!");
+                            Log.e("No NEWS!","Check successfull, ids are identical.");
                         }
                         else
                         {
                             storage.setLastId(row0.getInt("id"));
-                            Log.e("NEWS!", "Přišla nám nová půjčka, chceš se mrknout?");
+                            Log.e("NEWS!", "Sending notification as soon as os handles it! New loan found by id.");
+                            //Create new notification
                             NotificationHelper.getInstance().DrawNotification(MarketplaceService.this);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    //NotificationHelper.getInstance().DrawNotification(MarketplaceService.this);
                 }
             }
         };
     }
 
+    /**
+     * Stop timer in case this service must be restarted
+     */
     public void stoptimertask() {
         //stop the timer, if it's not already null
         if (timer != null) {
@@ -115,7 +137,7 @@ public class MarketplaceService extends Service {
         }
     }
 
-
+    //just basic service stuff that needs to be here.
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
