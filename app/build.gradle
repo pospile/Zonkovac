@@ -32,4 +32,5 @@ dependencies {
     implementation 'net.orange-box.storebox:storebox-lib:1.4.0'
     implementation 'com.github.halysongoncalves:pugnotification:1.8.1'
     implementation 'com.ramotion.fluidslider:fluid-slider:0.2.0'
+    implementation 'in.shadowfax:proswipebutton:1.1'
 }

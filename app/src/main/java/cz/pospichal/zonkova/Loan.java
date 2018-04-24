@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import in.shadowfax.proswipebutton.ProSwipeButton;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
@@ -49,7 +50,7 @@ public class Loan extends AppCompatActivity {
             TextView loanInterest = (TextView)findViewById(R.id.finInterest);
             TextView loanTerm = (TextView)findViewById(R.id.finTerm);
             TextView loanUser = (TextView)findViewById(R.id.finName);
-            Button loanOpen = (Button)findViewById(R.id.openLoan);
+            final ProSwipeButton loanOpen = (ProSwipeButton)findViewById(R.id.openLoan);
 
             final CardView incomeCard = (CardView)findViewById(R.id.incomeCard);
             final TextView incomeText = (TextView)findViewById(R.id.incomeText);
@@ -79,16 +80,15 @@ public class Loan extends AppCompatActivity {
                 }
             });
 
-            loanOpen.setOnClickListener(new View.OnClickListener() {
+            loanOpen.setOnSwipeListener(new ProSwipeButton.OnSwipeListener() {
                 @Override
-                public void onClick(View view) {
+                public void onSwipeConfirm() {
                     try {
                         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(loan.getString("url")));
                         startActivity(browserIntent);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
                 }
             });
 
